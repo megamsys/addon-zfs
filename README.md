@@ -1,4 +1,4 @@
-# Opennebula ZFS Storage Driver 
+# Opennebula ZFS Storage Driver
 
 ## Description
 
@@ -6,7 +6,7 @@ The ZFS datastore driver provides OpenNebula with the possibility of using ZVOL 
 
 ## Development
 
-To contribute bug patches or new features, you can use the github Pull Request model. It is assumed that code and documentation are contributed under the Apache License 2.0. 
+To contribute bug patches or new features, you can use the github Pull Request model. It is assumed that code and documentation are contributed under the Apache License 2.0.
 
 More info:
 * [How to Contribute](http://opennebula.org/addons/contribute/)
@@ -20,7 +20,7 @@ More info:
 
 ## Compatibility
 
-This add-on is compatible with OpenNebula 4.6+
+This add-on is compatible with OpenNebula 5.2+
 
 ## Requirements
 
@@ -28,12 +28,20 @@ This add-on is compatible with OpenNebula 4.6+
 
 Password-less ssh access to an OpenNebula ZFS host. (eg. localhost)
 
-### OpenNebula ZFS Host
+### OpenNebula Host
+
+A compute node to run VMs.
+
+### ZFS Host (FreeNAS)
 
 The oneadmin user should be able to execute ZFS related command with sudo passwordlessly.
 
 * Password-less sudo permission for: `zfs` and `dd`.
 * `oneadmin` needs to belong to the `disk` group (for KVM).
+
+This was tested with FreeNAS 9.10 U4.
+
+**The monitor script has changes to support FreeBSD.**
 
 ## Limitations
 
@@ -157,13 +165,13 @@ DS_MAD_CONF = [
 ]
 ~~~~
 
-## Usage 
+## Usage
 
 The ZFS transfer driver will create volume with zfs. Once the zvol is available, the driver will link it to `disk.i`.
 
 ### Host Configuration
 
-The host must have ZFS and have the dataset used in the `DATASET` attributed of the datastore template. 
+The host must have ZFS and have the dataset used in the `DATASET` attributed of the datastore template.
 
 It’s also required to have password-less sudo permission for `zfs` and `dd`.
 
@@ -191,5 +199,3 @@ Under ``/var/lib/one/remotes/``:
 
 * Due [this issue](https://github.com/zfsonlinux/zfs/issues/824) use more large values of `volblocksize`.
 * Also you may to turn on the writeback cache or set `io` to `native`
-
-
