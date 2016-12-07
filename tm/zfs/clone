@@ -44,7 +44,7 @@ source ${DRIVER_PATH}/../../datastore/zfs/zfs.conf
 
 SRC_HOST=`arg_host $SRC`
 SRC_PATH=`arg_path $SRC`
-SRC_DEV="/dev/zvol/$SRC_PATH"
+SRC_DEV="$SRC_PATH"
 
 DST_HOST=`arg_host $DST`
 DST_PATH=`arg_path $DST`
@@ -53,7 +53,7 @@ DISK_ID=$(echo $DST_PATH|awk -F. '{print $NF}')
 
 SNAPSHOT_NAME="${VM_ID}-${DISK_ID}"
 CLONE_PATH="$SRC_PATH-$VM_ID-$DISK_ID"
-CLONE_DEV="/dev/zvol/$CLONE_PATH"
+CLONE_DEV="$CLONE_PATH"
 
 #-------------------------------------------------------------------------------
 # Get Image information for resizing
