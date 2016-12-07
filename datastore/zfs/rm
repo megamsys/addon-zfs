@@ -68,7 +68,7 @@ if [ -z "$DST_HOST" ]; then
 fi
 
 SRC_PATH=`arg_path $SRC`
-DEV="/dev/zvol/$SRC_PATH"
+DEV="$SRC_PATH"
 
 RM_COMMAND=$(cat <<EOF
     set -e

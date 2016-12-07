@@ -45,7 +45,7 @@ DST_PATH=`arg_path $DST`
 DST_HOST=`arg_host $DST`
 DST_DIR=`dirname $DST_PATH`
 
-DEV="/dev/zvol/$SRC_PATH"
+DEV="$SRC_PATH"
 
 LINK_CMD=$(cat <<EOF
     set -e

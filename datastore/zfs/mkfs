@@ -78,7 +78,7 @@ set_up_datastore "$BASE_PATH" "$RESTRICTED_DIRS" "$SAFE_DIRS"
 IMAGE_NAME="one-${ID}"
 ZVOL_SOURCE="$DST_HOST:$DATASET_NAME/$IMAGE_NAME"
 
-DEV="/dev/zvol/$DATASET_NAME/$IMAGE_NAME"
+DEV="$DATASET_NAME/$IMAGE_NAME"
 
 # ------------ Image to save_as disk, no need to create a FS ------------
 
@@ -108,7 +108,7 @@ REGISTER_CMD=$(cat <<EOF
     done
 
     $SUDO chown oneadmin: $DEV
-    $SUDO $MKFS_COMMAND 
+    $SUDO $MKFS_COMMAND
 
     fi
 EOF
