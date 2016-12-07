@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # -------------------------------------------------------------------------- #
@@ -23,9 +24,9 @@
 # -------- Set up the environment to source common tools & conf ------------
 
 if [ -z "${ONE_LOCATION}" ]; then
-    LIB_LOCATION=/usr/lib/one
+   LIB_LOCATION=/usr/lib/one
 else
-    LIB_LOCATION=$ONE_LOCATION/lib
+   LIB_LOCATION=$ONE_LOCATION/lib
 fi
 
 . $LIB_LOCATION/sh/scripts_common.sh
@@ -44,42 +45,75 @@ XPATH="${DRIVER_PATH}/../xpath.rb -b $DRV_ACTION"
 unset i j XPATH_ELEMENTS
 
 while IFS= read -r -d '' element; do
-    XPATH_ELEMENTS[i++]="$element"
+   XPATH_ELEMENTS[i++]="$element"
 done < <($XPATH     /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/BRIDGE_LIST \
-                    /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/ZFS_CMD \
-                    /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/DATASET_NAME)
+                   /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/ZFS_CMD \
+                   /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/DATASET_NAME)
 
 unset i
 
 BRIDGE_LIST="${XPATH_ELEMENTS[i++]}"
 ZFS_CMD="${XPATH_ELEMENTS[i++]:-$ZFS_CMD}"
 DATASET_NAME="${XPATH_ELEMENTS[i++]:-$DATASET_NAME}"
-
 HOST=`get_destination_host`
 
 if [ -z "$HOST" ]; then
-    error_message "Datastore template missing 'BRIDGE_LIST' attribute."
-    exit -1
+   error_message "Datastore template missing 'BRIDGE_LIST' attribute."
+   exit -1
 fi
 
 # ------------ Compute datastore usage -------------
-MONITOR_SCRIPT=$(cat <<EOF
-    set -e
-    TOTAL_MB=\$($SUDO $ZFS_CMD list -H -p  -o available,used $DATASET_NAME | $AWK '{printf "%d", (\$1+\$2)/1024/1024}'  | $TR -d ' ')
-    FREE_MB=\$($SUDO $ZFS_CMD get -H -p available $DATASET_NAME | $AWK '{printf "%d",\$3/1024/1024}' | $TR -d ' ')
-    USED_MB=\$($SUDO $ZFS_CMD get -H -p used $DATASET_NAME | $AWK '{printf "%d",\$3/1024/1024}' | $TR -d ' ')
-    echo "USED_MB=\$USED_MB"
-    echo "TOTAL_MB=\$TOTAL_MB"
-    echo "FREE_MB=\$FREE_MB"
+## Patch for FREENAS 9.10 U4 - ZFS STARTS
+## It was a struggle to get the shell script execute in FreeBSD
+## In FreeBSD the default shell is csh
+## Change default shell for oneadmin to bash using the following command
+### chsh -s /bin/bash oneadmin
+### Try a passwordless auth to FreeNas to verify the shell using the following comamnd
+### echo $SHELL
+
+
+TOTAL_CMD=$(cat <<EOF
+   set -e
+  $ZFS_CMD list -H -p  -o available,used $DATASET_NAME
 EOF
 )
 
-MONITOR_DATA=$(ssh_monitor_and_log $HOST "$MONITOR_SCRIPT" 2>&1)
+TOTAL_RAW=$(ssh_monitor_and_log $HOST "$TOTAL_CMD" 2>&1)
+
+TOTAL_MB=`echo $TOTAL_RAW | $AWK '{printf "%d", (\$1+\$2)/1024/1024}'  | $TR -d ' '`
+
+FREE_CMD=$(cat <<EOF
+   set -e
+  $ZFS_CMD get -H -p available $DATASET_NAME
+EOF
+)
+
+FREE_RAW=$(ssh_monitor_and_log $HOST "$FREE_CMD" 2>&1)
+
+FREE_MB=`echo $FREE_RAW | $AWK '{printf "%d",\$3/1024/1024}' | $TR -d ' '`
+
+USED_CMD=$(cat <<EOF
+   set -e
+  $ZFS_CMD list -H -p  -o available,used $DATASET_NAME
+EOF
+)
+
+USED_RAW=$(ssh_monitor_and_log $HOST "$USED_CMD" 2>&1)
+
+USED_MB=`echo $USED_RAW | $AWK '{printf "%d",\$3/1024/1024}' | $TR -d ' '`
+
+MONITOR_SCRIPT=$(cat <<EOF
+TOTAL_MB=$TOTAL_MB FREE_MB=$FREE_MB USED_MB=$USED_MB
+EOF
+)
+## Patch for FREENAS 9.10 U4 - ZFS ENDS
+
+MONITOR_DATA=$MONITOR_SCRIPT
 MONITOR_STATUS=$?
 
 if [ "$MONITOR_STATUS" = "0" ]; then
-    echo "$MONITOR_DATA" | tr ' ' '\n'
+   echo "$MONITOR_DATA" | tr ' ' '\n'
 else
-    echo "$MONITOR_DATA"
-    exit $MONITOR_STATUS
+   echo "$MONITOR_DATA"
+   exit $MONITOR_STATUS
 fi
